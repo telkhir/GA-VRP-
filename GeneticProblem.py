@@ -1,21 +1,28 @@
 import random
 from random import randrange
-from time import time
 
 
 class GeneticProblem(object):
 
-    def __init__(self, genes, individuals_length):
-        self.genes = genes
-        self.individuals_length = individuals_length
+    def __init__(self, vehicles, stations):
+        self.vehicles = vehicles
+        self.stations = stations
 
-    def initial_population(self, initial_population_size, vehicles, all_stations):
+    def split_at_values(self, lst, values):
+        indices = [i for i, x in enumerate(lst) if x in values]
+        size = len(lst)
+        res = [lst[i: j] for i, j in
+               zip([0] + [x + 1 for x in indices], indices + ([size] if indices[-1] != size else []))]
+
+        return res, indices
+
+    def initial_population(self, initial_population_size):
         initial_population = []
         for _ in range(initial_population_size):
             chromosome = []
-            for vehicle in vehicles:
-                vehicle_stops_nb = random.randrange(0, len(all_stations))
-                trip = random.sample(list(all_stations), vehicle_stops_nb)
+            for vehicle in self.vehicles:
+                vehicle_stops_nb = random.randrange(0, len(self.stations))
+                trip = random.sample(list(self.stations), vehicle_stops_nb)
                 chromosome += [vehicle]
                 chromosome += trip
             initial_population.append(chromosome)
@@ -35,10 +42,10 @@ class GeneticProblem(object):
 
             return chromosome_result
 
-        print(chromosome)
-        vehiclesTripList, indices = split_at_values(chromosome, vehicles)
+        vehicles_trip_list, indices = self.split_at_values(chromosome, self.vehicles)
+
         i = 0
-        for vehicleTrip in vehiclesTripList:
+        for vehicleTrip in vehicles_trip_list:
             if len(vehicleTrip) >= 2:
                 if random.random() < prob:
                     aux = inversion_mutation(vehicleTrip)
@@ -58,23 +65,7 @@ class GeneticProblem(object):
         # print(list_childs2[1])
         return list_childs1
 
-    def decodeVRP(chromosome):
-        decoded_list = []
-        for k in chromosome:
-            if k in vehicles:
-                decoded_list.append(frontier)
-            else:
-                decoded_list.append(k)
-        return decoded_list
-
-    def fitnessVRP(chromosome):
-        def split_at_values(lst, values):
-            indices = [i for i, x in enumerate(lst) if x in values]
-            size = len(lst)
-            res = [lst[i: j] for i, j in
-                   zip([0] + [x + 1 for x in indices], indices + ([size] if indices[-1] != size else []))]
-            return res
-
+    def fitness(self, chromosome):
         fitness_value = 0
         # methode1 : finettes s the sum of distances in a chromosome
         # for i in range(0, len(chromosome)-1):
@@ -82,10 +73,10 @@ class GeneticProblem(object):
         #        fitness_value += distances[chromosome[i], chromosome[i+1]]
         print(chromosome)
 
-        vehiclesTripList = split_at_values(chromosome, vehicles)
+        vehicles_trip_list = self.split_at_values(chromosome, self.vehicles)
         # methode 2 : fitness is max distance of trips
         tripDistances = []
-        for vehicleTrip in vehiclesTripList:
+        for vehicleTrip in vehicles_trip_list:
 
             distance = 0
             nbStops = len(vehicleTrip)
@@ -123,7 +114,7 @@ class GeneticProblem(object):
 
         return fitness_value
 
-    def totalDistanceVRP(chromosome):
+    def total_distance(self, chromosome):
         def split_at_values(lst, values):
             indices = [i for i, x in enumerate(lst) if x in values]
             size = len(lst)

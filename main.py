@@ -1,39 +1,8 @@
 import random
-from random import randrange
 from time import time
 from DataReader import DataReader
 from GeneticProblem import GeneticProblem
-
-
-def new_generation_t(genetic_problem, k, population, n_parents, n_directs, prob_mutate):
-
-    def tournament_selection(genetic_problem, population, n, k):
-        winners = []
-        for _ in range(n):
-            elements = random.sample(population, k)
-            winners.append(min(elements, key=genetic_problem.fitness))
-        return winners
-
-    def cross_parents(genetic_problem, parents):
-        childs = []
-        for i in range(0, len(parents), 2):
-            childs.extend(genetic_problem.crossover(parents[i], parents[i + 1]))
-        return childs
-
-    def mutate(genetic_problem, population, prob):
-        for item in population:
-            genetic_problem.mutation(item, prob)
-        return population
-
-    print("##############################directs")
-    directs = tournament_selection(genetic_problem, population, n_directs, k)
-    print("##############################Crosses")
-    crosses = cross_parents(genetic_problem, tournament_selection(genetic_problem, population, n_parents, k))
-    print("##############################mutation")
-    mutations = mutate(genetic_problem, crosses, prob_mutate)
-    new_generation = directs + mutations
-
-    return new_generation
+from GenerationFactory import GenerationFactory
 
 
 if __name__ == "__main__":
@@ -49,37 +18,40 @@ if __name__ == "__main__":
     # How many time to run the whole algo
     problem_instances = 1
     print("EXECUTING ", problem_instances, " INSTANCES ")
-    genetic_problem = GeneticProblem(list(data["all_stations"]) + vehicles[:-1], len(list(data["all_stations"])))
-
-    print("------------------------- Executing VRP ----------------------------- \n")
-    print("Frontier = ", frontier)
-    print("")
+    genetic_problem = GeneticProblem(vehicles, list(data["all_stations"]))
+    generation_factory = GenerationFactory()
     t0 = time()
-    initial_population_size = 10
-    # nb of times we will produce a generation (this includes tournemenet, cross over and mutation for each generation)
-    nb_generations = 100
-    # ratio of the total population to be crossed over and mutated
-    ratio_cross = 0.8
-    # mutation probability
-    prob_mutate = 0.05
+    # nb_generations: nb of times we will produce a generation (includes tournament, cross over and mutation )
+    # ratio_cross : ratio of the total population to be crossed over and mutated
+    # prob_mutate : mutation probability
     # k: number of participants on the selection tournaments.
-    k = 2
+    initial_population_size, nb_generations, ratio_cross, prob_mutate, k = 100, 10, 0.8, 0.05, 2
+
     for _ in range(0, problem_instances):
         # Generate initial population
-        population = genetic_problem.initial_population(initial_population_size, vehicles, data["all_stations"])
+        new_population = genetic_problem.initial_population(initial_population_size)
 
+        # Define the n_parents to transform and n_direct (parents that will not be transformed)
         n_parents = round(initial_population_size * ratio_cross)
         n_parents = (n_parents if n_parents % 2 == 0 else n_parents - 1)
         n_directs = initial_population_size - n_parents
-        print("n_of parent to cross ", n_parents)
 
-        # generate generations
+        # Produce generations
         for _ in range(nb_generations):
-            population = new_generation_t(genetic_problem, k, population, n_parents, n_directs, prob_mutate)
+            print("######## Directs")
+            directs = generation_factory.tournament_selection(genetic_problem, new_population, n_directs, k)
+            print("######## Crosses")
+            crosses = generation_factory.cross_parents(genetic_problem,
+                                                       generation_factory.tournament_selection(genetic_problem,
+                                                                                               new_population,
+                                                                                               n_parents, k))
+            print("######## Mutation")
+            mutations = generation_factory.mutate(genetic_problem, crosses, prob_mutate)
+            new_population = directs + mutations
 
-        bestChromosome = min(population, key=genetic_problem.fitness)
-        genotype = genetic_problem.decode(bestChromosome)
-        print("Solution: {0}, Fitness: {1}, TotalDistance: {2}".format(genotype,
+        # get the best solution chromosome
+        bestChromosome = min(new_population, key=genetic_problem.fitness)
+        print("Solution: {0}, Fitness: {1}, TotalDistance: {2}".format(bestChromosome,
                                                                        genetic_problem.fitness(bestChromosome),
                                                                        genetic_problem.total_distance(bestChromosome)))
     t1 = time()
