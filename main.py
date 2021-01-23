@@ -21,21 +21,19 @@ def new_generation_t(genetic_problem, k, population, n_parents, n_directs, prob_
         return childs
 
     def mutate(genetic_problem, population, prob):
-        for i in population:
-            genetic_problem.mutation(i, prob)
+        for item in population:
+            genetic_problem.mutation(item, prob)
         return population
 
     print("##############################directs")
-    directs = tournament_selection(Problem_Genetic, population, n_directs, k)
+    directs = tournament_selection(genetic_problem, population, n_directs, k)
     print("##############################Crosses")
-    crosses = cross_parents(Problem_Genetic,
-                            tournament_selection(Problem_Genetic, population, n_parents, k))
-    # print("##############################mutattion")
-    # mutations = mutate(Problem_Genetic, crosses, prob_mutate)
-    new_generation = directs + crosses
+    crosses = cross_parents(genetic_problem, tournament_selection(genetic_problem, population, n_parents, k))
+    print("##############################mutation")
+    mutations = mutate(genetic_problem, crosses, prob_mutate)
+    new_generation = directs + mutations
 
     return new_generation
-
 
 
 if __name__ == "__main__":
@@ -64,6 +62,8 @@ if __name__ == "__main__":
     ratio_cross = 0.8
     # mutation probability
     prob_mutate = 0.05
+    # k: number of participants on the selection tournaments.
+    k = 2
     for _ in range(0, problem_instances):
         # Generate initial population
         population = genetic_problem.initial_population(initial_population_size, vehicles, data["all_stations"])
@@ -75,16 +75,13 @@ if __name__ == "__main__":
 
         # generate generations
         for _ in range(nb_generations):
-            population = new_generation_t(Problem_Genetic, k, opt, population, n_parents, n_directs, prob_mutate)
+            population = new_generation_t(genetic_problem, k, population, n_parents, n_directs, prob_mutate)
 
-        bestChromosome = min(population, key=Problem_Genetic.fitness)
-        # print("Chromosome: ", bestChromosome)
-        genotype = Problem_Genetic.decode(bestChromosome)
-        print(
-            "Solution: {0}, Fitness: {1}, TotalDistance: {2}".format(genotype, Problem_Genetic.fitness(bestChromosome),
-                                                                     Problem_Genetic.total_distance(bestChromosome)))
-        return (genotype, Problem_Genetic.fitness(bestChromosome))
-        #genetic_algorithm_t(VRP_PROBLEM, 2, min, 2, 10, 0.8, 0.05)
+        bestChromosome = min(population, key=genetic_problem.fitness)
+        genotype = genetic_problem.decode(bestChromosome)
+        print("Solution: {0}, Fitness: {1}, TotalDistance: {2}".format(genotype,
+                                                                       genetic_problem.fitness(bestChromosome),
+                                                                       genetic_problem.total_distance(bestChromosome)))
     t1 = time()
     print("\n")
     print("Total time: ", (t1 - t0), " secs.\n")
