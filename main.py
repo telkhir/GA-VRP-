@@ -8,7 +8,7 @@ from GenerationFactory import GenerationFactory
 # ratio_cross : ratio of the total population to be crossed over and mutated
 # prob_mutate : mutation probability
 # k: number of participants on the selection tournaments.
-initial_population_size, nb_generations, ratio_cross, prob_mutate, k = 200, 100, 0.8, 0.05, 2
+initial_population_size, nb_generations, ratio_cross, prob_mutate, k = 500, 100, 0.8, 0.05, 2
 
 if __name__ == "__main__":
 

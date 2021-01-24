@@ -17,9 +17,9 @@ class GeneticProblem(object):
             journeys = []
             left_trips = self.mandatory_trips.copy()
 
-            for vehicle in self.vehicles:
+            for _ in self.vehicles:
                 # number of served trips for this vehicle
-                served_trips_nb = random.randrange(0, len(left_trips))
+                served_trips_nb = random.randrange(0, 2)
                 # sample this number from the mandatory trips
                 trips_to_serve = random.sample(left_trips, served_trips_nb)
 
@@ -27,6 +27,8 @@ class GeneticProblem(object):
                 for trip in trips_to_serve:
                     homes.append(trip[0])
                     works.append(trip[1])
+
+                # get unique values only
                 homes = [i for n, i in enumerate(homes) if i not in homes[:n]]
                 works = [i for n, i in enumerate(works) if i not in works[:n]]
                 journey = random.sample(homes, len(homes)) + random.sample(works, len(works))
@@ -36,11 +38,52 @@ class GeneticProblem(object):
                 left_trips = [trip for trip in left_trips if trip not in trips_to_serve]
 
             if len(left_trips) > 1:
+                left_trips_copy = left_trips.copy()
                 for trip in left_trips:
-                    # add the trip to any journey
-                    pos = random.randrange(0, len(journeys))
-                    journeys[pos].insert(0, trip[0])
-                    journeys[pos].insert(len(journeys[pos]), trip[1])
+                    trip_exist = False
+                    for journey in journeys:
+                        if trip[0] in journey and trip[1] in journey:
+                            trip_exist = True
+                            left_trips_copy.remove(trip)
+                            break
+                    if trip_exist is False:
+                        # add the trip to any journey
+                        my_journeys_idx = []
+                        #for idx, journey in enumerate(journeys):
+                        #    if trip[0] in journey or trip[1] in journey:
+                        #        my_journeys_idx.append(idx)
+                        if len(my_journeys_idx) != 0:
+                            pos = random.choice(my_journeys_idx)
+                        else:
+                            pos = random.randrange(0, len(journeys))
+                        first_ixd_W = 0
+                        #for j, item in enumerate(journeys[pos]):
+                        #    if "W" in item:
+                        #        first_ixd_W = j
+                        #        break
+                        #if first_ixd_W != 0:
+                        #    journeys[pos].insert(random.randrange(0, first_ixd_W), trip[0])
+                        #    journeys[pos].insert(random.randrange(first_ixd_W, len(journeys[pos])), trip[1])
+                        #else:
+                        #    journeys[pos].insert(first_ixd_W, trip[0])
+                        #    journeys[pos].insert(first_ixd_W+1, trip[1])
+                        journeys[pos].insert(0, trip[0])
+                        journeys[pos].insert(len(journeys[pos]), trip[1])
+
+
+            # delete redandent w in a chromosome
+            for trip in self.mandatory_trips:
+                journey_of_existance = []
+                journey_ixd = []
+                for i, journey in enumerate(journeys):
+                    if trip[0] in journey and trip[1] in journey:
+                        journey_of_existance.append(journey)
+                        journey_ixd.append(i)
+                if len(journey_ixd) != 0:
+                    journeys_idx_to_drop_trip_from = random.sample(journey_ixd, len(journey_ixd)-1)
+                    for ixd in journeys_idx_to_drop_trip_from:
+                        # remove trip
+                        journeys[ixd] = [x for x in journeys[ixd] if x != trip[1]] #and x != trip[0]]
 
             for vehicle, journey in zip(self.vehicles, journeys):
                 chromosome += [vehicle]
@@ -108,13 +151,13 @@ class GeneticProblem(object):
     def fitness(self, chromosome):
         fitness_value = 0
         # methode1 : finettes s the sum of distances in a chromosome
-        # for i in range(0, len(chromosome)-1):
-        #    if chromosome[i] not in vehicles and chromosome[i+1] not in vehicles:
-        #        fitness_value += distances[chromosome[i], chromosome[i+1]]
+        #for i in range(0, len(chromosome)-1):
+        #    if chromosome[i] not in self.vehicles and chromosome[i+1] not in self.vehicles:
+        #        fitness_value += self.distances[chromosome[i], chromosome[i+1]]
 
         vehicles_trip_list, _ = self.split_at_values(chromosome, self.vehicles)
 
-        # methode 2 : fitness is max distance of trips
+        ## methode 2 : fitness is max distance of trips
         trips_distances = []
         for vehicleTrip in vehicles_trip_list:
             distance = 0
@@ -126,43 +169,15 @@ class GeneticProblem(object):
 
         fitness_value = max(trips_distances)
 
-        for vehicleTrip in vehicles_trip_list:
-            nb_stops = len(vehicleTrip)
-            if nb_stops != 0:
-                # trip must start by Home:
-                if 'W' in vehicleTrip[0]:
-                    fitness_value += 200000
-
-                # each trip must contain Hs and Ws
-                H_exist = False
-                W_exist = False
-                for stop in vehicleTrip:
-                    if "W" in stop:
-                        W_exist = True
-                        break
-                    if "H" in stop:
-                        H_exist = True
-                        break
-                if H_exist is False or W_exist is False:
-                    fitness_value += 200000
-
-                # if W is before H this is not a valid chromosome, should have a very big distance (bad fitness)
-                for i in range(0, nb_stops - 1):
-                    if "W" in vehicleTrip[i] and "H" in vehicleTrip[i + 1]:
-                        fitness_value += 100000
-                        break
-
-        # for each mandatory trips, at least one vehicle is serving it
+        ## for each mandatory trips, at least one vehicle is serving it
         for mandatory_trip in self.mandatory_trips:
             trip_exist = False
             for vehicleTrip in vehicles_trip_list:
                 if mandatory_trip[0] in vehicleTrip and mandatory_trip[1] in vehicleTrip:
                     trip_exist = True
-                    break
-                else:
-                    continue
-            if not trip_exist:
-                fitness_value += 10000000
+
+            if trip_exist is False:
+                fitness_value += 1000000
                 break
 
         return fitness_value
