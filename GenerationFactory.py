@@ -2,12 +2,13 @@ import random
 
 
 class GenerationFactory:
+
     def __init__(self, genetic_problem):
         self.genetic_problem = genetic_problem
 
-    def tournament_selection(self, genetic_problem, population, n, k):
+    def tournament_selection(self, genetic_problem, population, n_winners, k):
         winners = []
-        for _ in range(n):
+        for _ in range(n_winners):
             elements = random.sample(population, k)
             winners.append(min(elements, key=genetic_problem.fitness))
         return winners
