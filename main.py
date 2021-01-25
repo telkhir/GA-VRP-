@@ -3,6 +3,7 @@ from time import time
 from DataReader import DataReader
 from GeneticProblem import GeneticProblem
 from GenerationFactory import GenerationFactory
+import pprint
 
 # nb_generations: nb of times we will produce a generation (includes tournament, cross over and mutation )
 # ratio_cross : ratio of the total population to be crossed over and mutated
@@ -63,7 +64,19 @@ if __name__ == "__main__":
         print("Solution: {0}, Fitness: {1}, TotalDistance: {2}".format(bestChromosome,
                                                                        genetic_problem.fitness(bestChromosome),
                                                                        genetic_problem.total_distance(bestChromosome)))
-    print(best_results)
+    print("########################################")
+    for solution in best_results:
+        print("Valid Solution: ", solution)
+    print("########################################")
+    best_solution = min(best_results, key=lambda x: x["fitness"])
+    print("Best Solution: ")
+    print("Fitness: ", best_solution["fitness"])
+    print("Total Distance: ", best_solution["total_distance"])
+    print("Journeys:")
+    journeys, indices = genetic_problem.split_at_values(best_solution["Chromosome"], genetic_problem.vehicles)
+    for journey, vehicle in zip(journeys, genetic_problem.vehicles):
+        print([vehicle] + journey)
+
     t1 = time()
     print("\n")
     print("Total time: ", (t1 - t0), " secs.\n")
