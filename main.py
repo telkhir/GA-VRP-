@@ -8,12 +8,17 @@ from GenerationFactory import GenerationFactory
 # ratio_cross : ratio of the total population to be crossed over and mutated
 # prob_mutate : mutation probability
 # k: number of participants on the selection tournaments.
-initial_population_size, nb_generations, ratio_cross, prob_mutate, k = 500, 100, 0.8, 0.05, 2
+initial_population_size, nb_generations, ratio_cross, prob_mutate, k = 200, 100, 0.8, 0.05, 2
+
+# How many time to run the whole algo: for mini and small: 10 is enough, for big :100
+problem_instances = 10
+DATA_PATH = "data/data_transportationPb_mini.xlsx"
+
 
 if __name__ == "__main__":
 
     # reading the data from the excel file
-    dataReader = DataReader("data/data_transportationPb_mini.xlsx")
+    dataReader = DataReader(DATA_PATH)
     data = dataReader.read_data()
 
     # creating the list of vehicle names
@@ -21,9 +26,8 @@ if __name__ == "__main__":
     stations = list(data["all_stations"])
     distances = data["distances"]
     mandatory_trips = data["trips"]
+    best_results = []
 
-    # How many time to run the whole algo
-    problem_instances = 10
     print("EXECUTING ", problem_instances, " INSTANCES ")
     genetic_problem = GeneticProblem(vehicles, stations, distances, mandatory_trips)
     generation_factory = GenerationFactory(genetic_problem)
@@ -53,9 +57,13 @@ if __name__ == "__main__":
 
         # Get the best solution chromosome
         bestChromosome = min(new_population, key=genetic_problem.fitness)
+        if genetic_problem.fitness(bestChromosome) < 10000:
+            best_results.append({"Chromosome": bestChromosome, "fitness": genetic_problem.fitness(bestChromosome),
+                                 "total_distance": genetic_problem.total_distance(bestChromosome)})
         print("Solution: {0}, Fitness: {1}, TotalDistance: {2}".format(bestChromosome,
                                                                        genetic_problem.fitness(bestChromosome),
                                                                        genetic_problem.total_distance(bestChromosome)))
+    print(best_results)
     t1 = time()
     print("\n")
     print("Total time: ", (t1 - t0), " secs.\n")

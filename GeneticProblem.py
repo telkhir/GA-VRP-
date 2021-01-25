@@ -83,7 +83,7 @@ class GeneticProblem(object):
                     journeys_idx_to_drop_trip_from = random.sample(journey_ixd, len(journey_ixd)-1)
                     for ixd in journeys_idx_to_drop_trip_from:
                         # remove trip
-                        journeys[ixd] = [x for x in journeys[ixd] if x != trip[1]] #and x != trip[0]]
+                        journeys[ixd] = [x for x in journeys[ixd] ]# if x != trip[1] and x != trip[0]]
 
             for vehicle, journey in zip(self.vehicles, journeys):
                 chromosome += [vehicle]
@@ -168,6 +168,7 @@ class GeneticProblem(object):
             trips_distances.append(distance)
 
         fitness_value = max(trips_distances)
+        #fitness_value = sum(trips_distances)
 
         ## for each mandatory trips, at least one vehicle is serving it
         for mandatory_trip in self.mandatory_trips:

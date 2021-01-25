@@ -10,6 +10,7 @@ class DataReader:
     def read_data(self):
         param_data = pd.read_excel(self.excel_file_path, "Param", skiprows=0)
         trips_df = pd.read_excel(self.excel_file_path, "Trips", skiprows=0)
+        trips_df = trips_df[trips_df["NbEmployees"] != 0]
         distances_df = pd.read_excel(self.excel_file_path, "Distance", skiprows=0)
         nb_vehicles = param_data.loc[param_data["Param"] == "NbVehicles"][["Value1", "Value2", "Value3"]].sum(axis=1).values[0]
         nb_home = param_data.loc[param_data["Param"] == "NbHome"]["Value1"].values[0]
