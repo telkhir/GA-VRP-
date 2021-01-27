@@ -5,6 +5,7 @@ from GeneticProblem import GeneticProblem
 from GenerationFactory import GenerationFactory
 import pprint
 
+# initial_population_size: number of chromosomes in the initial population
 # nb_generations: nb of times we will produce a generation (includes tournament, cross over and mutation )
 # ratio_cross : ratio of the total population to be crossed over and mutated
 # prob_mutate : mutation probability
@@ -21,6 +22,8 @@ if __name__ == "__main__":
     # reading the data from the excel file
     dataReader = DataReader(DATA_PATH)
     data = dataReader.read_data()
+
+    data["nb_vehicles"] = 9
 
     # creating the list of vehicle names
     vehicles = ['vehicle' + str(i) for i in range(0, int(data["nb_vehicles"]))]
